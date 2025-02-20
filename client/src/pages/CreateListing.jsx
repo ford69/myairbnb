@@ -86,7 +86,8 @@ const CreateListing = () => {
     setFormDescription({ ...formDescription, [name]: value })
   }
 
-  console.log(formDescription)
+  //HANDLE SUBMIT FUNCTIONALITY
+  
 
   return (
     <>
@@ -387,6 +388,8 @@ const CreateListing = () => {
 
             </div>
           </div>
+
+          <button className="submit_btn" type="submit">CREATE YOUR LISTING</button>
         </form>
       </div>
     </>

@@ -6,10 +6,6 @@ const listingSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    userId: {
-      type: String,
-      required: true,
-    },
     category: {
       type: String,
       required: true,
@@ -21,8 +17,8 @@ const listingSchema = new mongoose.Schema(
     streetAddress: {
       type: String,
       required: true,
-    },
-    postalCode: {
+    },  
+    aptSuite: {
       type: String,
       required: true,
     },
@@ -56,9 +52,9 @@ const listingSchema = new mongoose.Schema(
     },
     amenities: {
       type: Array,
-      default: [{}],
+      default: [],
     },
-    listingPhotoPaths: [{ type: String }], // Array of strings
+    listingPhotoPaths: [{ type: String }], // Store Photo URL
     title: {
       type: String,
       required: true,
@@ -68,16 +64,16 @@ const listingSchema = new mongoose.Schema(
       required: true,
     },
     highlight: {
-      type: Number,
+      type: String,
       required: true,
     },
     highlightDesc: {
-      type: Number,
-      default: 0,
+      type: String,
+      default: true,
     },
     price: {
       type: Number,
-      default: 0,
+      default: true,
     },
   },
   { timestamps: true }

@@ -8,46 +8,45 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { IoIosImages } from "react-icons/io";
 import { useState } from "react";
 import { BiTrash } from "react-icons/bi";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const CreateListing = () => {
+  const [category, setCategory] = useState("");
+  const [type, setType] = useState("");
+  const [amenities, setAmenities] = useState([]);
 
-    const [category, setCategory] = useState("")
-    const [type, setType] = useState("")
-    const [amenities, setAmenities] = useState([])
-
-    /* LOCATION */
-    const [formLocation, setFormLocation] = useState({
+  /* LOCATION */
+  const [formLocation, setFormLocation] = useState({
     streetAddress: "",
     aptSuite: "",
     city: "",
     province: "",
     country: "",
-    });
+  });
 
-    const handleChangeLocation = (e) => {
+  const handleChangeLocation = (e) => {
     const { name, value } = e.target;
-    setFormLocation({ ...formLocation, [name]: value })};
+    setFormLocation({ ...formLocation, [name]: value });
+  };
 
-    /* BASIC COUNTS */
-    const [guestCount, setGuestCount] = useState(1);
-    const [bedroomCount, setBedroomCount] = useState(1);
-    const [bedCount, setBedCount] = useState(1);
-    const [bathroomCount, setBathroomCount] = useState(1);
+  /* BASIC COUNTS */
+  const [guestCount, setGuestCount] = useState(1);
+  const [bedroomCount, setBedroomCount] = useState(1);
+  const [bedCount, setBedCount] = useState(1);
+  const [bathroomCount, setBathroomCount] = useState(1);
 
-    /* AMENITIES */
+  /* AMENITIES */
 
-
-      const handleSelectedAmenities = (facility) => {
-        if (amenities.includes(facility)) {
-          setAmenities((prevAmenities) =>
-            prevAmenities.filter((option) => option !== facility)
-          );
-        } else {
-          setAmenities((prev) => [...prev, facility]);
-      }
-    };
-
-  
+  const handleSelectedAmenities = (facility) => {
+    if (amenities.includes(facility)) {
+      setAmenities((prevAmenities) =>
+        prevAmenities.filter((option) => option !== facility)
+      );
+    } else {
+      setAmenities((prev) => [...prev, facility]);
+    }
+  };
 
   /*UPLOAD, DRAG & DROP REMOVE PHOTOS FUNCTIONALITY */
   const [photos, setPhotos] = useState([]);
@@ -77,17 +76,61 @@ const CreateListing = () => {
     title: "",
     description: "",
     highlight: "",
-    highlightDescription: "",
-    price: 0
+    highlightDesc: "",
+    price: 0,
   });
 
   const handleChangeDescription = (e) => {
     const { name, value } = e.target;
-    setFormDescription({ ...formDescription, [name]: value })
-  }
+    setFormDescription({ ...formDescription, [name]: value });
+  };
 
-  //HANDLE SUBMIT FUNCTIONALITY
-  
+  const creatorId = useSelector((state) => state.user._id);
+
+  const navigate = useNavigate();
+  const handlePost = async (e) => {
+    e.preventDefault();
+
+    try {
+      /* CREATE A NEW FORM DATA OBJECT TO HANDLE FILE UPLOAD */
+      const listingForm = new FormData();
+      listingForm.append("creator", creatorId);
+      listingForm.append("category", category);
+      listingForm.append("type", type);
+      listingForm.append("streetAddress", formLocation.streetAddress);
+      listingForm.append("aptSuite", formLocation.aptSuite);
+      listingForm.append("city", formLocation.city);
+      listingForm.append("province", formLocation.province);
+      listingForm.append("country", formLocation.country);
+      listingForm.append("guestCount", guestCount);
+      listingForm.append("bedroomCount", bedroomCount);
+      listingForm.append("bedCount", bedCount);
+      listingForm.append("bathroomCount", bathroomCount);
+      listingForm.append("amenities", amenities);
+      listingForm.append("title", formDescription.title);
+      listingForm.append("description", formDescription.description);
+      listingForm.append("highlight", formDescription.highlight);
+      listingForm.append("highlightDesc", formDescription.highlightDesc);
+      listingForm.append("price", formDescription.price);
+
+      photos.forEach((photo) => {
+        listingForm.append("listingPhotos", photo);
+      });
+
+      //Send Post Request to the server
+
+      const response = await fetch("http://localhost:3001/properties/create", {
+        method: "POST",
+        body: listingForm,
+      })
+
+      if (response.ok) {
+        navigate("/");
+      }
+    } catch (err) {
+      console.log("Publish Listing Failed", err.message);
+    }
+  };
 
   return (
     <>
@@ -95,14 +138,20 @@ const CreateListing = () => {
 
       <div className="create-listing">
         <h1>Publish Your Place</h1>
-        <form>
+        <form onSubmit={handlePost}>
           <div className="create-listing_step1">
             <h2>Step 1: Tell us about your Place</h2>
             <hr />
             <h3>Which of these categories best describes your place</h3>
             <div className="category-list">
               {categories?.map((item, index) => (
-                <div className={`category ${category === item.label ? "selected" : "" }`} key={index} onClick={() => setCategory(item.label)}>
+                <div
+                  className={`category ${
+                    category === item.label ? "selected" : ""
+                  }`}
+                  key={index}
+                  onClick={() => setCategory(item.label)}
+                >
                   <div className="category_icon">{item.icon}</div>
                   <p>{item.label}</p>
                 </div>
@@ -112,7 +161,11 @@ const CreateListing = () => {
             <h3>What type of place will guest have?</h3>
             <div className="type-list">
               {types?.map((item, index) => (
-                <div className={`type ${type === item.name ? "selected" : ""}`} key={index} onClick={() => setType(item.name)}>
+                <div
+                  className={`type ${type === item.name ? "selected" : ""}`}
+                  key={index}
+                  onClick={() => setType(item.name)}
+                >
                   <div className="type_text">
                     <h4>{item.name}</h4>
                     <p>{item.description}</p>
@@ -151,7 +204,14 @@ const CreateListing = () => {
 
               <div className="location">
                 <p>City</p>
-                <input type="text" placeholder="City" name="city" value={formLocation.city} onChange={handleChangeLocation} required />
+                <input
+                  type="text"
+                  placeholder="City"
+                  name="city"
+                  value={formLocation.city}
+                  onChange={handleChangeLocation}
+                  required
+                />
               </div>
             </div>
 
@@ -187,7 +247,9 @@ const CreateListing = () => {
                 <p>Guests</p>
                 <div className="basic_count">
                   <RemoveCircleOutline
-                  onClick={() => {guestCount > 1 && setGuestCount(guestCount - 1)}}
+                    onClick={() => {
+                      guestCount > 1 && setGuestCount(guestCount - 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -196,7 +258,9 @@ const CreateListing = () => {
                   />
                   <p>{guestCount}</p>
                   <AddCircleOutline
-                  onClick={() => {setGuestCount(guestCount + 1)}}
+                    onClick={() => {
+                      setGuestCount(guestCount + 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -210,7 +274,9 @@ const CreateListing = () => {
                 <p>Bedrooms</p>
                 <div className="basic_count">
                   <RemoveCircleOutline
-                  onClick={() => {bedroomCount > 1 && setBedroomCount(bedroomCount - 1)}}
+                    onClick={() => {
+                      bedroomCount > 1 && setBedroomCount(bedroomCount - 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -219,7 +285,9 @@ const CreateListing = () => {
                   />
                   <p>{bedroomCount}</p>
                   <AddCircleOutline
-                   onClick={() => {setBedroomCount(bedroomCount + 1)}}
+                    onClick={() => {
+                      setBedroomCount(bedroomCount + 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -233,8 +301,9 @@ const CreateListing = () => {
                 <p>Beds</p>
                 <div className="basic_count">
                   <RemoveCircleOutline
-                  onClick={() => {bedCount > 1 && setBedCount(bedCount - 1)}}
-                  
+                    onClick={() => {
+                      bedCount > 1 && setBedCount(bedCount - 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -243,7 +312,9 @@ const CreateListing = () => {
                   />
                   <p>{bedCount}</p>
                   <AddCircleOutline
-                  onClick={() => {setBedCount(bedCount + 1)}}
+                    onClick={() => {
+                      setBedCount(bedCount + 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -257,7 +328,9 @@ const CreateListing = () => {
                 <p>Bathrooms</p>
                 <div className="basic_count">
                   <RemoveCircleOutline
-                  onClick={() => {bathroomCount > 1 && setBathroomCount(bathroomCount - 1)}}
+                    onClick={() => {
+                      bathroomCount > 1 && setBathroomCount(bathroomCount - 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -266,7 +339,9 @@ const CreateListing = () => {
                   />
                   <p>{bathroomCount}</p>
                   <AddCircleOutline
-                  onClick={() => {setBathroomCount(bathroomCount + 1)}}
+                    onClick={() => {
+                      setBathroomCount(bathroomCount + 1);
+                    }}
                     sx={{
                       fontSize: "25",
                       cursor: "pointer",
@@ -284,7 +359,13 @@ const CreateListing = () => {
             <h3>Tell guest what your place has to offer</h3>
             <div className="amenities">
               {facilities?.map((item, index) => (
-                <div className={`facility ${amenities.includes(item) ? "selected" : ""}`} key={index} onClick={() => handleSelectedAmenities(item)}>
+                <div
+                  className={`facility ${
+                    amenities.includes(item.name) ? "selected" : ""
+                  }`}
+                  key={index}
+                  onClick={() => handleSelectedAmenities(item.name)}
+                >
                   <div className="facility_icon">{item.icon}</div>
                   <p>{item.name}</p>
                 </div>
@@ -303,7 +384,7 @@ const CreateListing = () => {
                     {photos.length < 1 && (
                       <>
                         <input
-                        id="image"
+                          id="image"
                           type="file"
                           style={{ display: "none" }}
                           accept="image/*"
@@ -334,13 +415,13 @@ const CreateListing = () => {
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  
                                 >
                                   <img
                                     src={URL.createObjectURL(photo)}
                                     alt=""
                                   />
-                                  <button type="button"
+                                  <button
+                                    type="button"
                                     onClick={() => handleRemovePhoto(index)}
                                   >
                                     <BiTrash />
@@ -371,25 +452,62 @@ const CreateListing = () => {
                 )}
               </Droppable>
             </DragDropContext>
-            
+
             <h3>What makes your place attractive and exciting</h3>
             <div className="description">
-                <p>Title</p>
-                <input type="text" placeholder="Title" name="title" value={formDescription.title} onChange={handleChangeDescription} required />
-                <p>Description</p>
-                <textarea type="text" placeholder="Description" name="description" value={formDescription.description} onChange={handleChangeDescription} required />
-                <p>Highlight</p>
-                <input type="text" placeholder="Highlight" name="highlight" value={formDescription.highlight} onChange={handleChangeDescription} required />
-                <p>Highlight details</p>
-                <textarea type="text" placeholder="Highlight details" name="HighlightDescription" value={formDescription.highlightDesc} onChange={handleChangeDescription} required />
-                <p>Set your Price </p>
-                <span>$</span>
-                <input type="number" placeholder="100" name="price" value={formDescription.price} className="price" onChange={handleChangeDescription} required />
-
+              <p>Title</p>
+              <input
+                type="text"
+                placeholder="Title"
+                name="title"
+                value={formDescription.title}
+                onChange={handleChangeDescription}
+                required
+              />
+              <p>Description</p>
+              <textarea
+                type="text"
+                placeholder="Description"
+                name="description"
+                value={formDescription.description}
+                onChange={handleChangeDescription}
+                required
+              />
+              <p>Highlight</p>
+              <input
+                type="text"
+                placeholder="Highlight"
+                name="highlight"
+                value={formDescription.highlight}
+                onChange={handleChangeDescription}
+                required
+              />
+              <p>Highlight details</p>
+              <textarea
+                type="text"
+                placeholder="Highlight details"
+                name="highlightDesc"
+                value={formDescription.highlightDesc}
+                onChange={handleChangeDescription}
+                required
+              />
+              <p>Set your Price </p>
+              <span>$</span>
+              <input
+                type="number"
+                placeholder="100"
+                name="price"
+                value={formDescription.price}
+                className="price"
+                onChange={handleChangeDescription}
+                required
+              />
             </div>
           </div>
 
-          <button className="submit_btn" type="submit">CREATE YOUR LISTING</button>
+          <button className="submit_btn" type="submit">
+            CREATE YOUR LISTING
+          </button>
         </form>
       </div>
     </>

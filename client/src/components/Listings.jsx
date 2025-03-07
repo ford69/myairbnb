@@ -43,28 +43,51 @@ const Listings = () => {
 
   return (
     <>
-    <div className="category-list">
-      {categories?.map((category, index) => (
-        <div
-          className="category"
-          key={index}
-          onClick={() => setSelectedCategory(category.label)}
-        >
-          <div className="category_icon">{category.icon}</div>
-          <p>{category.label}</p>
-        </div>
-      ))}
-    </div>
+      <div className="category-list">
+        {categories?.map((category, index) => (
+          <div
+            className="category"
+            key={index}
+            onClick={() => setSelectedCategory(category.label)}
+          >
+            <div className="category_icon">{category.icon}</div>
+            <p>{category.label}</p>
+          </div>
+        ))}
+      </div>
 
-      {loading ? <Loader /> : (
+      {loading ? (
+        <Loader />
+      ) : (
         <div className="listings">
-            {listings.map((listing) => (<ListingCard/>))}
+          {listings.map(
+            ({
+              _id,
+              creator,
+              listingPhotoPaths,
+              city,
+              province,
+              country,
+              category,
+              type,
+              price,
+            }) => (
+              <ListingCard
+                listingId={_id}
+                creator={creator}
+                listingPhotoPaths={listingPhotoPaths}
+                city={city}
+                province={province}
+                country={country}
+                category={category}
+                type={type}
+                price={price}
+              />
+            )
+          )}
         </div>
-
       )}
-
     </>
-    
   );
 };
 

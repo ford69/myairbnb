@@ -19,6 +19,8 @@ app.use("/properties", listingRoutes)
 /* MONGOOSE SETUP */
 
 const PORT = 3001;
+
+console.log("Connecting to MongoDB at:", process.env.MONGO_URL);
 mongoose
   .connect(process.env.MONGO_URL, {
     dbName: "my_airbnb",
